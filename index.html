@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>CRUD - Sistema Completo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Lucimara Novaes Doces - Sistema de Gestão</h1>
+
+    <!-- Menu de Abas -->
+    <div class="tabs">
+        <div class="tab active" data-tab-target="abaDoces">🧁 Doces</div>
+        <div class="tab" data-tab-target="abaKits">🎁 Kits</div>
+        <div class="tab" data-tab-target="abaComposicao">⚙️ Montar Kit (Composição)</div>
+        <div class="tab" data-tab-target="abaVisualizacao">👁️ Visualização de Kits</div>
+        <div class="tab" data-tab-target="abaOrcamento">💰 Orçamento</div>
+    </div>
+
+    <!-- ================= ABA DOCES ================= -->
+    <div id="abaDoces" class="tab-content active">
+        <h2>Cadastro de Doces</h2>
+        <form id="doceForm">
+            <input type="hidden" id="doceId">
+            <input type="text" id="doceDescricao" placeholder="Descrição do Doce" required>
+            <input type="number" step="0.01" id="docePreco" placeholder="Preço (R$)" required>
+            <button type="submit">Salvar Doce</button>
+        </form>
+        <table>
+            <thead><tr><th>Código</th><th>Descrição</th><th>Preço</th><th>Ações</th></tr></thead>
+            <tbody id="tabelaDoces"></tbody>
+        </table>
+    </div>
+
+    <!-- ================= ABA KITS ================= -->
+    <div id="abaKits" class="tab-content">
+        <h2>Cadastro de Kits</h2>
+        <form id="kitForm">
+            <input type="hidden" id="kitId"> 
+            <input type="text" id="kitDescricao" placeholder="Nome/Descrição do Kit" required>
+            <button type="submit">Salvar Kit</button>
+        </form>
+        <table>
+            <thead><tr><th>Código</th><th>Descrição do Kit</th><th>Ações</th></tr></thead>
+            <tbody id="tabelaKits"></tbody>
+        </table>
+    </div>
+
+    <!-- ================= ABA COMPOSIÇÃO ================= -->
+    <div id="abaComposicao" class="tab-content">
+        <h2>Montar Composição do Kit</h2>
+        
+        <form id="composicaoForm">
+            <label>1. Selecione o Kit:</label><br>
+            <select id="selectKitBusca" required></select>
+            <hr style="border: 0.5px solid #eee; margin: 15px 0;">
+            
+            <label>2. Adicionar Doce ao Kit Selecionado:</label><br>
+            <select id="selectDoceAdd" required></select>
+            <input type="number" id="compQuantidade" placeholder="Quantidade" required min="1">
+            <input type="number" step="0.1" id="compDesconto" placeholder="Desconto (%)" value="0">
+            <button type="submit">Adicionar à Composição</button>
+        </form>
+
+        <h3>Itens no Kit Atual</h3>
+        <table>
+            <thead><tr><th>Doce</th><th>Preço Unit.</th><th>Qtd</th><th>Desconto</th><th>Total do Item</th><th>Ação</th></tr></thead>
+            <tbody id="tabelaComposicao"></tbody>
+        </table>
+        <h3 id="valorTotalKit" style="text-align: right; color: #4e342e;"></h3>
+    </div>
+
+    <!-- ================= ABA VISUALIZAÇÃO ================= -->
+    <div id="abaVisualizacao" class="tab-content">
+        <h2>Visualização de Kits</h2>
+        <p>Use as opções abaixo para gerar uma página de visualização para um ou mais kits.</p>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <label for="selectKitsVisualizacao">Selecione um ou mais kits (use Ctrl ou Shift para selecionar vários):</label><br>
+            <select id="selectKitsVisualizacao" multiple style="width: 100%; height: 150px; margin-top: 10px;"></select>
+            <br><br>
+            <strong>Para os kits selecionados:</strong>
+            <button id="btnVisualizarSelecionados">Visualizar</button>
+            <button id="btnPdfSelecionados" class="btn-view">Gerar PDF</button>
+            <br><br>
+            <strong>Para todos os kits:</strong>
+            <button id="btnVisualizarTodos">Visualizar</button>
+            <button id="btnPdfTodos" class="btn-view">Gerar PDF</button>
+        </div>
+    </div>
+
+    <!-- ================= ABA ORÇAMENTO ================= -->
+    <div id="abaOrcamento" class="tab-content">
+        <h2>Ferramenta de Orçamento</h2>
+        <div class="orcamento-grid">
+            <div class="orcamento-col">
+                <h3>Adicionar Itens</h3>
+                <div class="form-section">
+                    <h4>Adicionar Kit</h4>
+                    <select id="orcamento-select-kit"></select>
+                    <input type="number" id="orcamento-kit-qtd" placeholder="Qtd" min="1" value="1">
+                    <button id="btn-orcamento-add-kit">Adicionar Kit</button>
+                </div>
+                <div class="form-section">
+                    <h4>Adicionar Doce</h4>
+                    <select id="orcamento-select-doce"></select>
+                    <input type="number" id="orcamento-doce-qtd" placeholder="Qtd" min="1" value="1">
+                    <button id="btn-orcamento-add-doce">Adicionar Doce</button>
+                </div>
+            </div>
+            <div class="orcamento-col">
+                <h3>Resumo do Orçamento</h3>
+                <div class="orcamento-meta">
+                    <input type="text" id="orcamento-cliente" placeholder="Nome do Cliente (Opcional)">
+                    <label for="orcamento-validade">Validade:</label>
+                    <input type="date" id="orcamento-validade">
+                </div>
+                <table>
+                    <thead><tr><th>Item</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th><th>Ação</th></tr></thead>
+                    <tbody id="tabelaOrcamento"></tbody>
+                </table>
+                <div class="orcamento-summary">
+                    <div><span>Subtotal:</span> <span id="orcamento-subtotal">R$ 0.00</span></div>
+                    <div>
+                        <label>Desconto Geral (%):</label>
+                        <input type="number" id="orcamento-desconto-geral" value="0" min="0" step="0.1">
+                    </div>
+                    <div><label>Frete (R$):</label> <input type="number" id="orcamento-frete" value="0" min="0" step="0.01"></div>
+                    <div class="orcamento-total"><span>TOTAL:</span> <span id="orcamento-total-final">R$ 0.00</span></div>
+                </div>
+                <textarea id="orcamento-observacoes" placeholder="Observações adicionais (ex: condições de pagamento, detalhes da entrega)..."></textarea>
+                <button id="btn-orcamento-visualizar">Visualizar Orçamento</button>
+                <button id="btn-orcamento-pdf" class="btn-view">Gerar PDF</button>
+                <button id="btn-orcamento-limpar" class="btn-delete">Limpar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js" defer></script>
+</body>
+</html>
