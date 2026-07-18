@@ -216,7 +216,7 @@ function generateFullHtmlPage(content, req) {
             ul { list-style: none; padding: 0; }
             li { margin-bottom: 8px; padding: 5px 0; border-bottom: 1px dotted #eee; }
             li:last-child { border-bottom: none; }
-            .total { font-weight: bold; text-align: right; margin-top: 20px; font-size: 1.2em; color: #28a745; }
+            .total { font-weight: bold; text-align: right; margin-top: 20px; font-size: 1.0em; color: #28a745; }
             footer { text-align: center; margin-top: 30px; padding: 15px; background-color: #343a40; color: white; font-size: 0.9em; }
             footer a { color: #007bff; text-decoration: none; }
             footer a:hover { text-decoration: underline; }
@@ -225,7 +225,7 @@ function generateFullHtmlPage(content, req) {
         </style></head>
         <body>
             <div class="header-image-container">
-                <img src="${headerImageUrl}" width="180" height="80" alt="Logo da Empresa" class="header-image">
+                <img src="${headerImageUrl}" width="150" height="50" alt="Logo da Empresa" class="header-image">
             </div>
             ${content}
             <footer>
@@ -428,7 +428,7 @@ function generateOrcamentoHtml(orcamentoData, req) {
             body { 
                 font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                 background-color: #fafafa; 
-                color: #37474f; 
+                color: #074e6f; 
                 margin: 0;
                 padding: 20px;
             }
@@ -438,25 +438,25 @@ function generateOrcamentoHtml(orcamentoData, req) {
                 padding: 30px; 
                 border: 1px solid #eceff1; 
                 box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12); 
-                font-size: 16px; 
-                line-height: 24px; 
+                font-size: 14px; 
+                line-height: 18px; 
                 background: white;
             }
-            .header { text-align: center; margin-bottom: 40px; }
+            .header { text-align: center; margin-bottom: 20px; }
             .header img { width: 100%; max-width: 180px; }
-            .header h1 { margin: 10px 0 0; color: #4e342e; font-weight: 500; }
-            .details { margin-bottom: 30px; font-size: 0.95em; }
+            .header h1 { margin: 10px 0 0; color: #4e342e; font-weight: 400; }
+            .details { margin-bottom: 20px; font-size: 0.95em; }
             .details-item { margin-bottom: 5px; }
             table { width: 100%; line-height: inherit; text-align: left; border-collapse: collapse; }
-            table td, table th { padding: 12px 15px; vertical-align: top; }
-            .notes { margin-top: 30px; padding-top: 15px; border-top: 1px solid #eceff1; font-size: 0.9em; color: #546e7a; }
+            table td, table th { padding: 10px 13px; vertical-align: top; }
+            .notes { margin-top: 30px; padding-top: 15px; border-top: 1px solid #eceff1; font-size: 0.9em; color: #032738; }
             .notes p { margin: 5px 0 0; }
-            .invoice-table tr { border-bottom: 1px solid #eceff1; }
-            .invoice-table tr.heading th { background-color: #ffff; color: #4e342e; text-transform: uppercase; font-size: 12px; font-weight: 600; border-bottom: 3px solid #4e342e; }
+            .invoice-table tr { border-bottom: 1px solid #b5d7ee; }
+            .invoice-table tr.heading th { background-color: #ffff; color: #4e342e; text-transform: uppercase; font-size: 12px; font-weight: 600; border-bottom: 2px solid #4e342e; }
             .totals-table { float: right; width: 45%; margin-top: 20px; }
             .totals-table td { text-align: right; padding: 8px 0; }
             .totals-table tr.strong td { font-weight: 600; color: #4e342e; }
-            footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eceff1; font-size: 0.9em; color: #78909c; }
+            footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #b5d7ee; font-size: 0.9em; color: #032738; }
         </style>
         </head><body>
         <div class="invoice-box">
@@ -474,7 +474,7 @@ function generateOrcamentoHtml(orcamentoData, req) {
                 <tr><td>Desconto Geral (${descontoGeral}%):</td><td>R$ ${(subTotal - totalComDesconto).toFixed(2)}</td></tr>
                 <tr class="strong"><td>Total Parcial:</td><td>R$ ${totalComDesconto.toFixed(2)}</td></tr>
                 <tr><td>Frete:</td><td>R$ ${frete.toFixed(2)}</td></tr>
-                <tr class="strong" style="font-size: 1.2em;"><td>VALOR TOTAL:</td><td>R$ ${totalFinal.toFixed(2)}</td></tr>
+                <tr class="strong" style="font-size: 1.0em;"><td>VALOR TOTAL:</td><td>R$ ${totalFinal.toFixed(2)}</td></tr>
             </table>
             <div style="clear:both;"></div>
             ${observacoesHtml}

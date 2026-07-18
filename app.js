@@ -116,13 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalKit = 0;
         composicao.forEach(c => {
             const subtotal = (c.PRECO - c.PRECO * (c.DESCONTO / 100)) * c.QUANTIDADE;
+            const descontoDisplay = (c.PRECO - c.PRECO * (c.DESCONTO / 100));
             totalKit += subtotal;
             tabelaComposicao.innerHTML += `<tr>
                 <td>${c.NOME_DOCE}</td><td>R$ ${c.PRECO.toFixed(2)}</td><td>${c.QUANTIDADE}</td>
                 <td style="display: flex; align-items: center; gap: 5px;">
                     <input type="number" step="0.1" class="input-desconto" value="${c.DESCONTO}" style="width: 70px; margin: 0; padding: 4px;"> %
-                    <button class="btn-edit-desconto btn-edit" data-kit-id="${c.COD_KIT}" data-doce-id="${c.COD_DOCE}" style="padding: 5px 10px; font-size: 12px; margin: 0;">Salvar</button>
+                    <button class="btn-edit-desconto btn-edit" data-kit-id="${c.COD_KIT}" data-doce-id="${c.COD_DOCE}" style="padding: 10px 15px; font-size: 12px; margin: 0;">Salvar</button>
                 </td>
+                <td>R$ ${descontoDisplay.toFixed(2)}</td>
                 <td>R$ ${subtotal.toFixed(2)}</td>
                 <td><button class="btn-delete-item btn-delete" data-kit-id="${c.COD_KIT}" data-doce-id="${c.COD_DOCE}">Remover</button></td>
             </tr>`;
