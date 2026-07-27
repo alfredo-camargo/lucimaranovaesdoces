@@ -199,7 +199,7 @@ function generateKitHtmlBlock(kit, composition) {
  */
 function generateFullHtmlPage(content, req) {
     const host = req.protocol + '://' + req.get('host');
-    const headerImageUrl = process.env.HEADER_IMAGE_URL || `${host}/logo_lucimaranovaesdoces_2.png`;
+    const headerImageUrl = process.env.HEADER_IMAGE_URL || `${host}/logo.png`;
     const footerPhone = process.env.FOOTER_PHONE || '(11) 96901-5853';
     const footerEmail = process.env.FOOTER_EMAIL || 'rafmth@gmail.com';
     const footerCompanyName = process.env.FOOTER_COMPANY_NAME || 'Lucimara Novaes Doces';
