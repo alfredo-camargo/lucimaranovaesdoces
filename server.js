@@ -166,7 +166,7 @@ app.delete('/composicao/:cod_kit/:cod_doce', (req, res) => {
  * @returns {string} - O bloco HTML do kit.
  */
 function generateKitHtmlBlock(kit, composition) {
-    let html = `<div class="container"><h2>${kit.DESCRICAO}</h2>`;
+    let html = `<h3>${kit.DESCRICAO}</h3>`; // Alterado de h2 para h3 para melhor hierarquia no catálogo
     let totalKit = 0;
     let qtdTotal = 0;
 
@@ -184,11 +184,29 @@ function generateKitHtmlBlock(kit, composition) {
         html += `<tr><td colspan=4><hr></td></tr>`;
         html += `<tr><td>&nbsp;</td><td>${qtdTotal}</td><td>&nbsp;</td><td>R$ ${totalKit.toFixed(2)}</td></tr></table>`;
     } else {
-        html += `<p>Este kit não possui itens.</p>`;
+        html += `<p>Este kit não possui itens cadastrados.</p>`;
     }
+    // Removido o div.container externo, pois será envolvido por .kit-item na visualização do catálogo
+    return html; 
+}
 
-    html += `</div>`;
-    return html;
+/**
+ * Gera o bloco HTML para um único doce.
+ * @param {object} doce - O objeto do doce (com COD_DOCE, DESCRICAO, PRECO).
+ * @returns {string} - O bloco HTML do doce.
+ */
+function generateDoceHtmlBlock(doce) {
+    return `
+        <div class="container doce-item">
+            <h3>${doce.DESCRICAO}</h3>
+            <p><strong>Preço:</strong> R$ ${doce.PRECO.toFixed(2)}</p>
+            <p>Um doce delicioso, perfeito para qualquer ocasião.</p>
+            <!-- Você pode adicionar mais detalhes ou uma imagem aqui -->
+            <div class="doce-image-placeholder">
+                <!-- <img src="/path/to/doce_image.jpg" alt="${doce.DESCRICAO}"> -->
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -206,7 +224,7 @@ function generateFullHtmlPage(content, req) {
     const currentYear = new Date().getFullYear();
 
     return `
-        <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Visualização de Kits</title><style>
+        <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Catálogo de Produtos</title><style>
             body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f9; color: #333; }
             .header-image-container { text-align: center; padding: 10px 0; background-color: #fff; border-bottom: 1px solid #eee; }
             .header-image { max-width: 100%; height: auto; }
@@ -220,6 +238,24 @@ function generateFullHtmlPage(content, req) {
             footer { text-align: center; margin-top: 30px; padding: 15px; background-color: #343a40; color: white; font-size: 0.9em; }
             footer a { color: #007bff; text-decoration: none; }
             footer a:hover { text-decoration: underline; }
+            
+            /* Estilos para o catálogo */
+            .catalog-section { margin-bottom: 40px; }
+            .catalog-section h2 { text-align: center; color: #4e342e; margin-bottom: 25px; font-size: 1.8em; }
+            .kits-grid, .doces-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Pelo menos 2 colunas */
+                gap: 25px;
+                padding: 0 20px;
+            }
+            .kit-item, .doce-item {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                border: 1px solid #e0e0e0;
+            }
+            .doce-item h3 { margin-top: 0; color: #6d4c41; }
             table { border-collapse: collapse; margin-top: 15px; }
             th, td { padding: 8px; text-align: left; }
         </style></head>
@@ -246,7 +282,7 @@ const compositionSql = `
 // ==========================================
 // ROTAS PARA VISUALIZAÇÃO DE KIT
 // ==========================================
-app.get('/kits/:id/visualizacao', (req, res) => {
+/* app.get('/kits/:id/visualizacao', (req, res) => { // Esta rota será substituída pela rota de catálogo
     const host = req.protocol + '://' + req.get('host'); // Obtém o host dinamicamente
     // Variáveis de ambiente para configuração
     const headerImageUrl = process.env.HEADER_IMAGE_URL || `${host}/logo_lucimaranovaesdoces_2.png`; // Usa URL absoluta
@@ -272,9 +308,9 @@ app.get('/kits/:id/visualizacao', (req, res) => {
             res.status(200).type('text/html').send(fullHtml);
         });
     });
-});
+}); */
 
-// Rota para visualizar TODOS os kits
+/* // Rota para visualizar TODOS os kits - Será substituída pela rota de catálogo
 app.get('/kits/visualizacao/todos', async (req, res) => {
     try {
         const kits = await db.allAsync("SELECT COD_KIT, DESCRICAO FROM TB_KITS ORDER BY DESCRICAO", []);
@@ -291,9 +327,9 @@ app.get('/kits/visualizacao/todos', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-});
+}); */
 
-// Rota para visualizar kits SELECIONADOS
+/* // Rota para visualizar kits SELECIONADOS - Será substituída pela rota de catálogo
 app.get('/kits/visualizacao/selecionados', async (req, res) => {
     try {
         const ids = req.query.ids;
@@ -319,7 +355,7 @@ app.get('/kits/visualizacao/selecionados', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-});
+}); */
 
 // ==========================================
 // ROTAS PARA GERAR PDF DO KIT
@@ -355,26 +391,105 @@ async function generatePdfFromUrl(url, res, filename) {
     }
 }
 
-// Rota para PDF de um único kit
-app.get('/kits/:id/pdf', async (req, res) => {
-    const kitId = req.params.id;
-    const htmlUrl = `${req.protocol}://${req.get('host')}/kits/${kitId}/visualizacao`;
-    await generatePdfFromUrl(htmlUrl, res, `kit_${kitId}.pdf`);
+// ==========================================
+// ROTAS PARA DOCES STANDALONE
+// ==========================================
+app.get('/doces/standalone', async (req, res) => {
+    try {
+        const doces = await db.allAsync(`
+            SELECT COD_DOCE, DESCRICAO, PRECO
+            FROM TB_DOCES
+            WHERE COD_DOCE NOT IN (SELECT DISTINCT COD_DOCE FROM tb_kit_composicao)
+            ORDER BY DESCRICAO
+        `);
+        res.json(doces);
+    } catch (err) {
+        console.error('Erro ao buscar doces standalone:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// Rota para PDF de TODOS os kits
-app.get('/kits/pdf/todos', async (req, res) => {
-    const htmlUrl = `${req.protocol}://${req.get('host')}/kits/visualizacao/todos`;
-    await generatePdfFromUrl(htmlUrl, res, `todos_os_kits.pdf`);
+// ==========================================
+// NOVAS ROTAS PARA CATÁLOGO (KITS E DOCES)
+// ==========================================
+
+app.get('/catalog/visualizacao', async (req, res) => {
+    try {
+        const kitIdsParam = req.query.kitIds;
+        const doceIdsParam = req.query.doceIds;
+
+        let kits = [];
+        let doces = [];
+        let kitsHtml = '';
+        let docesHtml = '';
+
+        // Processar Kits
+        if (kitIdsParam) {
+            if (kitIdsParam === 'all') {
+                kits = await db.allAsync("SELECT COD_KIT, DESCRICAO FROM TB_KITS ORDER BY DESCRICAO", []);
+            } else {
+                const idArray = kitIdsParam.split(',').map(Number);
+                const placeholders = idArray.map(() => '?').join(',');
+                kits = await db.allAsync(`SELECT COD_KIT, DESCRICAO FROM TB_KITS WHERE COD_KIT IN (${placeholders})`, idArray);
+            }
+
+            for (const kit of kits) {
+                const composition = await db.allAsync(compositionSql, [kit.COD_KIT]);
+                kitsHtml += `<div class="kit-item">${generateKitHtmlBlock(kit, composition)}</div>`; // Envolve com .kit-item
+            }
+        }
+
+        // Processar Doces
+        if (doceIdsParam) {
+            const idArray = doceIdsParam.split(',').map(Number);
+            const placeholders = idArray.map(() => '?').join(','); // Corrigido para usar placeholders
+            doces = await db.allAsync(`SELECT COD_DOCE, DESCRICAO, PRECO FROM TB_DOCES WHERE COD_DOCE IN (${placeholders})`, idArray);
+
+            for (const doce of doces) {
+                docesHtml += generateDoceHtmlBlock(doce);
+            }
+        }
+
+        if (kits.length === 0 && doces.length === 0) {
+            return res.status(400).json({ error: 'Nenhum kit ou doce foi selecionado para o catálogo.' });
+        }
+
+        let content = '';
+        if (kitsHtml) {
+            content += `<div class="catalog-section"><h2>Nossos Kits</h2><div class="kits-grid">${kitsHtml}</div></div>`;
+        }
+        if (docesHtml) {
+            content += `<div class="catalog-section"><h2>Doces Individuais</h2><div class="doces-grid">${docesHtml}</div></div>`;
+        }
+
+        const fullHtml = generateFullHtmlPage(content, req);
+        res.status(200).type('text/html').send(fullHtml);
+
+    } catch (err) {
+        console.error('Erro ao gerar visualização do catálogo:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// Rota para PDF de kits SELECIONADOS
-app.get('/kits/pdf/selecionados', async (req, res) => {
-    const ids = req.query.ids;
-    if (!ids) return res.status(400).json({ error: 'Nenhum ID de kit foi fornecido.' });
+app.get('/catalog/pdf', async (req, res) => {
+    const kitIdsParam = req.query.kitIds;
+    const doceIdsParam = req.query.doceIds;
+
+    if (!kitIdsParam && !doceIdsParam) {
+        return res.status(400).json({ error: 'Nenhum ID de kit ou doce foi fornecido.' });
+    }
+
+    const kitQuery = kitIdsParam ? `kitIds=${kitIdsParam}` : '';
+    const doceQuery = doceIdsParam ? `doceIds=${doceIdsParam}` : '';
+    const queryString = [kitQuery, doceQuery].filter(Boolean).join('&');
+
+    const htmlUrl = `${req.protocol}://${req.get('host')}/catalog/visualizacao?${queryString}`;
     
-    const htmlUrl = `${req.protocol}://${req.get('host')}/kits/visualizacao/selecionados?ids=${ids}`;
-    await generatePdfFromUrl(htmlUrl, res, `kits_selecionados.pdf`);
+    const filename = (kitIdsParam === 'all' && !doceIdsParam) ? 'catalogo_todos_kits.pdf' : 
+                     (!kitIdsParam && doceIdsParam) ? 'catalogo_doces_selecionados.pdf' :
+                     'catalogo_personalizado.pdf';
+
+    await generatePdfFromUrl(htmlUrl, res, filename);
 });
 
 // ==========================================

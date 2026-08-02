@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnVisualizarSelecionados = document.getElementById('btnVisualizarSelecionados');
     const btnPdfSelecionados = document.getElementById('btnPdfSelecionados');
     const btnVisualizarTodos = document.getElementById('btnVisualizarTodos');
+    const selectDocesVisualizacao = document.getElementById('selectDocesVisualizacao'); // Novo select para doces na visualização
     const btnPdfTodos = document.getElementById('btnPdfTodos');
 
     const orcamentoSelectKit = document.getElementById('orcamento-select-kit');
@@ -84,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>
                     <button class="btn-edit" data-id="${d.COD_DOCE}" data-descricao="${d.DESCRICAO}" data-preco="${d.PRECO}">Editar</button>
                     <button class="btn-delete" data-id="${d.COD_DOCE}">Deletar</button>
+                    
                 </td></tr>`;
             selectDoceAdd.innerHTML += `<option value="${d.COD_DOCE}">${d.DESCRICAO} (R$ ${d.PRECO.toFixed(2)})</option>`;
         });
@@ -95,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tabelaKits.innerHTML = '';
         selectKitBusca.innerHTML = '<option value="">-- Selecione um Kit --</option>';
         selectKitsVisualizacao.innerHTML = '';
+        orcamentoSelectKit.innerHTML = '<option value="">-- Selecione um Kit --</option>'; // Reset para evitar duplicação
         kits.forEach(k => {
             tabelaKits.innerHTML += `<tr>
                 <td>${k.COD_KIT}</td><td>${k.DESCRICAO}</td>
@@ -189,6 +192,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const composicao = await fetchData(`composicao/${codKit}`);
         if (composicao) renderComposicao(composicao);
+    };
+
+    const carregarDocesStandalone = async () => {
+        const docesStandalone = await fetchData('doces/standalone');
+        if (docesStandalone) {
+            selectDocesVisualizacao.innerHTML = ''; // Limpa as opções anteriores
+            docesStandalone.forEach(d => {
+                selectDocesVisualizacao.innerHTML += `<option value="${d.COD_DOCE}">${d.DESCRICAO} (R$ ${d.PRECO.toFixed(2)})</option>`;
+            });
+        }
     };
 
     // --- Event Listeners ---
@@ -290,25 +303,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // VISUALIZAÇÃO
-    const getSelectedKitIds = () => Array.from(selectKitsVisualizacao.selectedOptions).map(option => option.value);
+    const getSelectedIds = (selectElement) => Array.from(selectElement.selectedOptions).map(option => option.value);
 
-    btnVisualizarTodos.addEventListener('click', () => window.open(`${API_URL}/kits/visualizacao/todos`, '_blank'));
-    btnPdfTodos.addEventListener('click', () => window.open(`${API_URL}/kits/pdf/todos`, '_blank'));
+    btnVisualizarTodos.addEventListener('click', () => window.open(`${API_URL}/catalog/visualizacao?kitIds=all`, '_blank'));
+    btnPdfTodos.addEventListener('click', () => window.open(`${API_URL}/catalog/pdf?kitIds=all`, '_blank'));
 
     btnVisualizarSelecionados.addEventListener('click', () => {
-        const selectedIds = getSelectedKitIds();
-        if (selectedIds.length === 0) {
-            return alert('Por favor, selecione pelo menos um kit para visualizar.');
+        const selectedKitIds = getSelectedIds(selectKitsVisualizacao);
+        const selectedDoceIds = getSelectedIds(selectDocesVisualizacao);
+
+        if (selectedKitIds.length === 0 && selectedDoceIds.length === 0) {
+            return alert('Por favor, selecione pelo menos um kit ou um doce para visualizar o catálogo.');
         }
-        window.open(`${API_URL}/kits/visualizacao/selecionados?ids=${selectedIds.join(',')}`, '_blank');
+
+        const kitQuery = selectedKitIds.length > 0 ? `kitIds=${selectedKitIds.join(',')}` : '';
+        const doceQuery = selectedDoceIds.length > 0 ? `doceIds=${selectedDoceIds.join(',')}` : '';
+        const queryString = [kitQuery, doceQuery].filter(Boolean).join('&');
+
+        window.open(`${API_URL}/catalog/visualizacao?${queryString}`, '_blank');
     });
 
     btnPdfSelecionados.addEventListener('click', () => {
-        const selectedIds = getSelectedKitIds();
-        if (selectedIds.length === 0) {
-            return alert('Por favor, selecione pelo menos um kit para gerar o PDF.');
+        const selectedKitIds = getSelectedIds(selectKitsVisualizacao);
+        const selectedDoceIds = getSelectedIds(selectDocesVisualizacao);
+
+        if (selectedKitIds.length === 0 && selectedDoceIds.length === 0) {
+            return alert('Por favor, selecione pelo menos um kit ou um doce para gerar o PDF do catálogo.');
         }
-        window.open(`${API_URL}/kits/pdf/selecionados?ids=${selectedIds.join(',')}`, '_blank');
+        const kitQuery = selectedKitIds.length > 0 ? `kitIds=${selectedKitIds.join(',')}` : ''; // Variável corrigida
+        const doceQuery = selectedDoceIds.length > 0 ? `doceIds=${selectedDoceIds.join(',')}` : ''; // Variável corrigida
+        const queryString = [kitQuery, doceQuery].filter(Boolean).join('&');
+
+        window.open(`${API_URL}/catalog/pdf?${queryString}`, '_blank');
     });
 
     // ORÇAMENTO
@@ -392,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const init = () => {
         carregarDoces();
         carregarKits();
+        carregarDocesStandalone(); // Carrega os doces standalone para o select de visualização
     };
 
     init();

@@ -76,19 +76,24 @@
         <h2>Visualização de Kits</h2>
         <p>Use as opções abaixo para gerar uma página de visualização para um ou mais kits.</p>
         
-        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <label for="selectKitsVisualizacao">Selecione um ou mais kits (use Ctrl ou Shift para selecionar vários):</label><br>
-            <select id="selectKitsVisualizacao" multiple style="width: 100%; height: 150px; margin-top: 10px;"></select>
-            <br><br>
-            <strong>Para os kits selecionados:</strong>
-            <button id="btnVisualizarSelecionados">Visualizar</button>
-            <button id="btnPdfSelecionados" class="btn-view">Gerar PDF</button>
-            <br><br>
-            <strong>Para todos os kits:</strong>
-            <button id="btnVisualizarTodos">Visualizar</button>
-            <button id="btnPdfTodos" class="btn-view">Gerar PDF</button>
+        <div class="form-section">
+            <h3>Montar Catálogo Personalizado</h3>
+            <label for="selectKitsVisualizacao">Selecione os Kits (Ctrl/Shift para múltiplos):</label><br>
+            <select id="selectKitsVisualizacao" multiple></select>
+            <br>
+            <label for="selectDocesVisualizacao">Selecione os Doces Individuais (Ctrl/Shift para múltiplos):</label><br>
+            <select id="selectDocesVisualizacao" multiple></select>
+            <br>
+            <button id="btnVisualizarSelecionados">Visualizar Catálogo</button>
+            <button id="btnPdfSelecionados" class="btn-view">Gerar PDF do Catálogo</button>
+            <hr style="border: 0.5px solid #eee; margin: 15px 0;">
+            <h3>Catálogo Completo</h3>
+            <button id="btnVisualizarTodos">Visualizar Todos os Kits</button>
+            <button id="btnPdfTodos" class="btn-view">Gerar PDF de Todos os Kits</button>
         </div>
     </div>
+
+
 
     <!-- ================= ABA ORÇAMENTO ================= -->
     <div id="abaOrcamento" class="tab-content">
