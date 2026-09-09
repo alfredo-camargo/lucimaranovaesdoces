@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname)); // Adiciona middleware para servir arquivos estáticos da pasta raiz
 
-const db = new sqlite3.Database('./banco.sqlite', (err) => {
+const db = new sqlite3.Database('./data/banco.sqlite', (err) => {
     if (err) console.error('Erro ao conectar ao banco:', err.message);
     else console.log('Conectado ao banco de dados SQLite.');
 });
