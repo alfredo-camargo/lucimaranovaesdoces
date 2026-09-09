@@ -1,0 +1,12 @@
+
+services:
+  app:
+    build: .
+    container_name: node_sqlite_app
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mantém o arquivo do SQLite salvo permanentemente na sua máquina local
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
