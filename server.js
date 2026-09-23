@@ -3,9 +3,10 @@ const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util'); // Usado para 'promisify' os métodos do DB
 const cors = require('cors');
 const puppeteer = require('puppeteer'); // Importa puppeteer
-const fetch = require('node-fetch').default; // Importa node-fetch (acessando o default export)
+const fetch = globalThis.fetch || require('node-fetch').default;
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname)); // Adiciona middleware para servir arquivos estáticos da pasta raiz
@@ -505,7 +506,7 @@ app.get('/catalog/pdf', async (req, res) => {
 function generateOrcamentoHtml(orcamentoData, req) {
     const { items, subTotal, descontoGeral, totalComDesconto, frete, totalFinal, cliente, validade, observacoes } = orcamentoData;
     const host = req.protocol + '://' + req.get('host');
-    const headerImageUrl = `${host}/logo_lucimaranovaesdoces_2.png`;
+    const headerImageUrl = process.env.HEADER_IMAGE_URL || `${host}/logo.png`;
     const currentYear = new Date().getFullYear();
 
     let itemsHtml = '';

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_URL = 'http://localhost:3000';
+    const API_URL = window.location.origin;
 
     // --- Cache de Elementos DOM ---
     const doceForm = document.getElementById('doceForm');
