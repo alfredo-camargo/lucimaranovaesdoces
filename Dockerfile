@@ -1,23 +1,31 @@
-# Usando uma imagem estável do Node.js
-FROM node:20-alpine
+FROM python:3.12-slim-bookworm
 
-# Instala dependências necessárias para compilar o módulo sqlite3
-RUN apk add --no-cache python3 make g++
+# Instala dependências do sistema necessárias para WeasyPrint (Cairo, Pango, fontes, etc.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpango-1.0-0 \
+    libharfbuzz0b \
+    libpangoft2-1.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libffi-dev \
+    shared-mime-info \
+    fonts-dejavu \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copia arquivos de dependências
-COPY package*.json ./
-
-# Instala dependências (compilando o sqlite3 se necessário)
-RUN npm install --omit=dev
+# Copia requirements e instala dependências Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copia o restante do código
 COPY . .
 
-# Cria a pasta onde o SQLite guardará o banco
+# Garante que a pasta de dados do SQLite existe
 RUN mkdir -p /app/data
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000", "--proxy-headers", "--forwarded-allow-ips=*"]
