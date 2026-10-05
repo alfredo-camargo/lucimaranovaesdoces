@@ -133,6 +133,33 @@ def test():
     print(f"    ✓ Orçamento #{orc_id} com {len(detalhe['items'])} item, cliente '{detalhe['CLIENTE']}'.\n")
 
     # ------------------------------------------------------------------
+    print(f"13b. Testando atualização do orçamento existente #{orc_id} (sem duplicar)...")
+    orcamentos_antes = len(s.get(f"{BASE_URL}/orcamentos").json())
+    orcamento_payload_update = {
+        "cod_orcamento": orc_id,
+        "items": [
+            {"id": 1, "nome": "Kit Festa Atualizado", "tipo": "kit",
+             "quantidade": 3, "precoUnitario": 100.0, "subtotal": 300.0}
+        ],
+        "cliente": "Maria da Silva Alterada", "validade": "2027-01-15",
+        "observacoes": "Entrega expressa.",
+        "subTotal": 300.0, "descontoGeral": 10.0,
+        "totalComDesconto": 270.0, "frete": 30.0, "totalFinal": 300.0
+    }
+    r = s.post(f"{BASE_URL}/orcamento/salvar", json=orcamento_payload_update)
+    assert r.status_code == 200, f"Esperado 200, recebeu {r.status_code}: {r.text}"
+    assert r.json()["COD_ORCAMENTO"] == orc_id, "O ID do orçamento deveria permanecer o mesmo!"
+
+    orcamentos_depois = len(s.get(f"{BASE_URL}/orcamentos").json())
+    assert orcamentos_antes == orcamentos_depois, "O orçamento foi duplicado ao invés de atualizado!"
+
+    detalhe_atualizado = s.get(f"{BASE_URL}/orcamentos/{orc_id}").json()
+    assert detalhe_atualizado["CLIENTE"] == "Maria da Silva Alterada"
+    assert detalhe_atualizado["TOTAL_FINAL"] == 300.0
+    assert detalhe_atualizado["items"][0]["nome"] == "Kit Festa Atualizado"
+    print(f"    ✓ Orçamento #{orc_id} atualizado com sucesso sem duplicação.\n")
+
+    # ------------------------------------------------------------------
     print(f"14. Testando PDF do orçamento #{orc_id}...")
     r = s.get(f"{BASE_URL}/orcamentos/{orc_id}/pdf")
     assert r.status_code == 200, f"Esperado 200, recebeu {r.status_code}"

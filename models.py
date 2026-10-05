@@ -72,6 +72,7 @@ class OrcamentoItem(BaseModel):
     subtotal: float
 
 class OrcamentoPayload(BaseModel):
+    cod_orcamento: Optional[int] = None
     items: List[OrcamentoItem] = []
     subTotal: float = 0.0
     descontoGeral: float = 0.0

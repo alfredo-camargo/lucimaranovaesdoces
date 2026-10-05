@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_URL = window.location.origin;
     let currentUser = null;
     let orcamentoAtual = [];
+    let orcamentoEmEdicaoId = null;
 
     // --- Cache de Elementos DOM ---
     const loginOverlay = document.getElementById('loginOverlay');
@@ -57,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnOrcamentoPdf = document.getElementById('btn-orcamento-pdf');
     const btnOrcamentoLimpar = document.getElementById('btn-orcamento-limpar');
     const btnOrcamentoSalvar = document.getElementById('btn-orcamento-salvar');
+    const btnOrcamentoSalvarNovo = document.getElementById('btn-orcamento-salvar-novo');
+    const orcamentoEdicaoBadge = document.getElementById('orcamentoEdicaoBadge');
+    const orcamentoEdicaoNumero = document.getElementById('orcamentoEdicaoNumero');
     const orcamentoSalvoFeedback = document.getElementById('orcamentoSalvoFeedback');
 
     const tabelaOrcamentosSalvos = document.getElementById('tabelaOrcamentosSalvos');
@@ -217,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('access_token');
         currentUser = null;
         orcamentoAtual = [];
+        setOrcamentoEmEdicao(null);
         mostrarLogin();
     });
 
@@ -347,6 +352,24 @@ document.addEventListener('DOMContentLoaded', () => {
         orcamentoTotalFinal.textContent = `R$ ${totalFinal.toFixed(2)}`;
     };
 
+    const setOrcamentoEmEdicao = (id) => {
+        orcamentoEmEdicaoId = id ? parseInt(id) : null;
+        if (orcamentoEmEdicaoId) {
+            if (orcamentoEdicaoBadge) {
+                orcamentoEdicaoNumero.textContent = orcamentoEmEdicaoId;
+                orcamentoEdicaoBadge.style.display = 'inline-flex';
+            }
+            btnOrcamentoSalvar.textContent = `💾 Atualizar Orçamento #${orcamentoEmEdicaoId}`;
+            if (btnOrcamentoSalvarNovo) btnOrcamentoSalvarNovo.style.display = 'inline-block';
+        } else {
+            if (orcamentoEdicaoBadge) {
+                orcamentoEdicaoBadge.style.display = 'none';
+            }
+            btnOrcamentoSalvar.textContent = '💾 Salvar no Histórico';
+            if (btnOrcamentoSalvarNovo) btnOrcamentoSalvarNovo.style.display = 'none';
+        }
+    };
+
     const limparOrcamento = () => {
         orcamentoAtual = [];
         orcamentoDescontoGeral.value = 0;
@@ -355,10 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
         orcamentoValidade.value = '';
         orcamentoObservacoes.value = '';
         orcamentoSalvoFeedback.style.display = 'none';
+        setOrcamentoEmEdicao(null);
         renderOrcamento();
     };
 
-    const getOrcamentoPayload = () => {
+    const getOrcamentoPayload = (forcarNovo = false) => {
         let subTotal = 0;
         orcamentoAtual.forEach(item => subTotal += item.subtotal);
         const descontoGeral = parseFloat(orcamentoDescontoGeral.value) || 0;
@@ -366,6 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalComDesconto = subTotal * (1 - descontoGeral / 100);
         const totalFinal = totalComDesconto + frete;
         return {
+            cod_orcamento: forcarNovo ? null : orcamentoEmEdicaoId,
             items: orcamentoAtual,
             cliente: orcamentoCliente.value,
             validade: orcamentoValidade.value,
@@ -405,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const gerarSaidaOrcamento = async (tipo) => {
         if (orcamentoAtual.length === 0) return alert('Adicione pelo menos um item ao orçamento.');
-        const payload = getOrcamentoPayload();
+        const payload = getOrcamentoPayload(false);
         const res = await fetch(`${API_URL}/orcamento/${tipo}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
@@ -420,15 +445,32 @@ document.addEventListener('DOMContentLoaded', () => {
     btnOrcamentoSalvar.addEventListener('click', async () => {
         if (orcamentoAtual.length === 0) return alert('Adicione pelo menos um item ao orçamento antes de salvar.');
         orcamentoSalvoFeedback.style.display = 'none';
-        const payload = getOrcamentoPayload();
+        const payload = getOrcamentoPayload(false);
         const res = await fetchData('orcamento/salvar', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         if (res) {
+            setOrcamentoEmEdicao(res.COD_ORCAMENTO);
             orcamentoSalvoFeedback.textContent = `✅ ${res.message}`;
             orcamentoSalvoFeedback.style.display = 'block';
         }
     });
+
+    if (btnOrcamentoSalvarNovo) {
+        btnOrcamentoSalvarNovo.addEventListener('click', async () => {
+            if (orcamentoAtual.length === 0) return alert('Adicione pelo menos um item ao orçamento antes de salvar.');
+            orcamentoSalvoFeedback.style.display = 'none';
+            const payload = getOrcamentoPayload(true);
+            const res = await fetchData('orcamento/salvar', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (res) {
+                setOrcamentoEmEdicao(res.COD_ORCAMENTO);
+                orcamentoSalvoFeedback.textContent = `✅ ${res.message}`;
+                orcamentoSalvoFeedback.style.display = 'block';
+            }
+        });
+    }
 
     // ==========================================
     // ORÇAMENTOS SALVOS
@@ -473,7 +515,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!confirm('Excluir este orçamento salvo?')) return;
             const id = e.target.dataset.id;
             const res = await fetchData(`orcamentos/${id}`, { method: 'DELETE' });
-            if (res) carregarOrcamentosSalvos();
+            if (res) {
+                if (orcamentoEmEdicaoId && orcamentoEmEdicaoId == id) {
+                    setOrcamentoEmEdicao(null);
+                }
+                carregarOrcamentosSalvos();
+            }
         }
         if (e.target.classList.contains('btn-carregar-orcamento')) {
             const id = e.target.dataset.id;
@@ -489,13 +536,14 @@ document.addEventListener('DOMContentLoaded', () => {
             orcamentoObservacoes.value = detalhe.OBSERVACOES || '';
             orcamentoDescontoGeral.value = detalhe.DESCONTO_GERAL || 0;
             orcamentoFrete.value = detalhe.FRETE || 0;
+            setOrcamentoEmEdicao(id);
             renderOrcamento();
             // Navegar para a aba de orçamento
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.getElementById('abaOrcamento').classList.add('active');
             document.querySelector('[data-tab-target="abaOrcamento"]').classList.add('active');
-            alert(`Orçamento #${id} carregado! Você pode editá-lo e salvar novamente.`);
+            alert(`Orçamento #${id} carregado! Ao salvar, as alterações serão atualizadas neste mesmo orçamento.`);
         }
     });
 

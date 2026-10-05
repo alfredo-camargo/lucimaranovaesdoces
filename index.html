@@ -176,7 +176,12 @@
                 </div>
             </div>
             <div class="orcamento-col">
-                <h3>Resumo do Orçamento</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="margin: 0;">Resumo do Orçamento</h3>
+                    <div id="orcamentoEdicaoBadge" style="display: none; font-size: 0.85rem; background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; padding: 4px 10px; border-radius: 12px; font-weight: 600;">
+                        ✏️ Editando Orçamento #<span id="orcamentoEdicaoNumero"></span>
+                    </div>
+                </div>
                 <div class="orcamento-meta">
                     <input type="text" id="orcamento-cliente" placeholder="Nome do Cliente (Opcional)">
                     <label for="orcamento-validade">Validade:</label>
@@ -199,6 +204,7 @@
                 
                 <div class="orcamento-actions">
                     <button id="btn-orcamento-salvar" class="btn-success">💾 Salvar no Histórico</button>
+                    <button id="btn-orcamento-salvar-novo" class="btn-secondary" style="display: none;">📄 Salvar como Novo</button>
                     <button id="btn-orcamento-visualizar">Visualizar</button>
                     <button id="btn-orcamento-pdf" class="btn-view">Gerar PDF</button>
                     <button id="btn-orcamento-limpar" class="btn-delete">Limpar</button>

@@ -456,9 +456,55 @@ def salvar_orcamento(
     payload: OrcamentoPayload,
     user: Dict[str, Any] = Depends(get_current_active_user)
 ):
-    """Salva o orçamento e seus itens no banco de dados SQLite."""
+    """Salva ou atualiza o orçamento e seus itens no banco de dados SQLite."""
     if not payload.items:
         raise HTTPException(status_code=400, detail="O orçamento não possui nenhum item.")
+
+    if payload.cod_orcamento:
+        orcamento_existente = db.fetch_one(
+            "SELECT COD_ORCAMENTO FROM TB_ORCAMENTOS WHERE COD_ORCAMENTO = ?",
+            (payload.cod_orcamento,)
+        )
+        if orcamento_existente:
+            orcamento_id = payload.cod_orcamento
+            db.execute_query(
+                """
+                UPDATE TB_ORCAMENTOS SET
+                    CLIENTE = ?, VALIDADE = ?, OBSERVACOES = ?, SUBTOTAL = ?,
+                    DESCONTO_GERAL = ?, TOTAL_COM_DESCONTO = ?, FRETE = ?, TOTAL_FINAL = ?
+                WHERE COD_ORCAMENTO = ?
+                """,
+                (
+                    payload.cliente or "",
+                    payload.validade or "",
+                    payload.observacoes or "",
+                    payload.subTotal,
+                    payload.descontoGeral,
+                    payload.totalComDesconto,
+                    payload.frete,
+                    payload.totalFinal,
+                    orcamento_id
+                )
+            )
+            db.execute_query("DELETE FROM TB_ORCAMENTO_ITENS WHERE COD_ORCAMENTO = ?", (orcamento_id,))
+            for item in payload.items:
+                db.execute_insert(
+                    """
+                    INSERT INTO TB_ORCAMENTO_ITENS (
+                        COD_ORCAMENTO, TIPO, ID_ORIGEM, NOME, QUANTIDADE, PRECO_UNITARIO, SUBTOTAL
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        orcamento_id,
+                        item.tipo or "item",
+                        item.id,
+                        item.nome,
+                        item.quantidade,
+                        item.precoUnitario,
+                        item.subtotal
+                    )
+                )
+            return {"COD_ORCAMENTO": orcamento_id, "message": f"Orçamento #{orcamento_id} atualizado com sucesso!"}
 
     orcamento_id = db.execute_insert(
         """
@@ -580,6 +626,7 @@ def _build_payload_from_db(id: int) -> OrcamentoPayload:
     ]
 
     return OrcamentoPayload(
+        cod_orcamento=int(orcamento["COD_ORCAMENTO"]),
         items=items,
         subTotal=float(orcamento["SUBTOTAL"]),
         descontoGeral=float(orcamento["DESCONTO_GERAL"]),
