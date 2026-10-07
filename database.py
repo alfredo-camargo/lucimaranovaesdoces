@@ -69,6 +69,7 @@ def init_db():
                 COD_ORCAMENTO INTEGER PRIMARY KEY AUTOINCREMENT,
                 CLIENTE TEXT,
                 VALIDADE TEXT,
+                DATA_ENTREGA TEXT,
                 OBSERVACOES TEXT,
                 SUBTOTAL REAL NOT NULL,
                 DESCONTO_GERAL REAL DEFAULT 0,
@@ -79,6 +80,12 @@ def init_db():
                 COD_USUARIO INTEGER
             )
         """)
+        # Garante migração da coluna DATA_ENTREGA para bancos existentes
+        cursor.execute("PRAGMA table_info(TB_ORCAMENTOS)")
+        colunas_orcamento = [col[1] for col in cursor.fetchall()]
+        if "DATA_ENTREGA" not in colunas_orcamento:
+            cursor.execute("ALTER TABLE TB_ORCAMENTOS ADD COLUMN DATA_ENTREGA TEXT")
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS TB_ORCAMENTO_ITENS (
                 COD_ITEM INTEGER PRIMARY KEY AUTOINCREMENT,

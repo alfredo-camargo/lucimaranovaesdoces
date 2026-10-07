@@ -183,9 +183,18 @@
                     </div>
                 </div>
                 <div class="orcamento-meta">
-                    <input type="text" id="orcamento-cliente" placeholder="Nome do Cliente (Opcional)">
-                    <label for="orcamento-validade">Validade:</label>
-                    <input type="date" id="orcamento-validade">
+                    <div class="orcamento-meta-field">
+                        <label for="orcamento-cliente">Cliente:</label>
+                        <input type="text" id="orcamento-cliente" placeholder="Nome do Cliente (Opcional)">
+                    </div>
+                    <div class="orcamento-meta-field">
+                        <label for="orcamento-validade">Validade:</label>
+                        <input type="date" id="orcamento-validade">
+                    </div>
+                    <div class="orcamento-meta-field">
+                        <label for="orcamento-data-entrega">📅 Data de Entrega:</label>
+                        <input type="date" id="orcamento-data-entrega">
+                    </div>
                 </div>
                 <table>
                     <thead><tr><th>Item</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th><th>Ação</th></tr></thead>
@@ -217,21 +226,38 @@
     <!-- ================= ABA ORÇAMENTOS SALVOS ================= -->
     <div id="abaOrcamentosSalvos" class="tab-content">
         <h2>Histórico de Orçamentos Salvos</h2>
-        <p>Consulte, visualize ou reimprima orçamentos gerados anteriormente.</p>
+        <div class="orcamentos-toolbar">
+            <p style="margin: 0; color: #546e7a;">Consulte, organize e acompanhe as datas dos pedidos para confeccionar.</p>
+            <div class="orcamentos-toolbar-controls">
+                <label for="selectOrdenacaoOrcamentos"><strong>Ordenar por:</strong></label>
+                <select id="selectOrdenacaoOrcamentos" style="margin: 0; width: auto; max-width: 260px;">
+                    <option value="entrega_asc">⏳ Próxima Entrega Primeiro</option>
+                    <option value="entrega_desc">📅 Entrega Mais Distante</option>
+                    <option value="id_desc">🆕 Mais Recentes Criados</option>
+                    <option value="id_asc">Oldest Criados</option>
+                </select>
+                <button id="btnFiltroProximaEntrega" type="button" class="btn-sm btn-secondary" title="Ordenar para confeccionar">
+                    🎂 Próximos Pedidos
+                </button>
+            </div>
+        </div>
         <table>
             <thead>
                 <tr>
                     <th>Nº</th>
-                    <th>Data</th>
+                    <th>Criação</th>
                     <th>Cliente</th>
                     <th>Validade</th>
+                    <th id="thEntrega" style="cursor: pointer; user-select: none;" title="Clique para ordenar por data de entrega">
+                        📅 Data de Entrega <span id="sortIconEntrega">⏳</span>
+                    </th>
                     <th>Total</th>
                     <th>Gerado por</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody id="tabelaOrcamentosSalvos">
-                <tr><td colspan="7" style="text-align: center;">Carregando orçamentos salvos...</td></tr>
+                <tr><td colspan="8" style="text-align: center;">Carregando orçamentos salvos...</td></tr>
             </tbody>
         </table>
     </div>

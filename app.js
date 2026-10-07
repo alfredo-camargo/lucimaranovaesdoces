@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const orcamentoTotalFinal = document.getElementById('orcamento-total-final');
     const orcamentoCliente = document.getElementById('orcamento-cliente');
     const orcamentoValidade = document.getElementById('orcamento-validade');
+    const orcamentoDataEntrega = document.getElementById('orcamento-data-entrega');
     const orcamentoObservacoes = document.getElementById('orcamento-observacoes');
     const btnOrcamentoVisualizar = document.getElementById('btn-orcamento-visualizar');
     const btnOrcamentoPdf = document.getElementById('btn-orcamento-pdf');
@@ -64,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const orcamentoSalvoFeedback = document.getElementById('orcamentoSalvoFeedback');
 
     const tabelaOrcamentosSalvos = document.getElementById('tabelaOrcamentosSalvos');
+    const selectOrdenacaoOrcamentos = document.getElementById('selectOrdenacaoOrcamentos');
+    const btnFiltroProximaEntrega = document.getElementById('btnFiltroProximaEntrega');
+    const thEntrega = document.getElementById('thEntrega');
+    const sortIconEntrega = document.getElementById('sortIconEntrega');
 
     const formUsuario = document.getElementById('formUsuario');
     const adminUsuarioId = document.getElementById('adminUsuarioId');
@@ -376,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         orcamentoFrete.value = 0;
         orcamentoCliente.value = '';
         orcamentoValidade.value = '';
+        if (orcamentoDataEntrega) orcamentoDataEntrega.value = '';
         orcamentoObservacoes.value = '';
         orcamentoSalvoFeedback.style.display = 'none';
         setOrcamentoEmEdicao(null);
@@ -394,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             items: orcamentoAtual,
             cliente: orcamentoCliente.value,
             validade: orcamentoValidade.value,
+            data_entrega: orcamentoDataEntrega ? orcamentoDataEntrega.value : '',
             observacoes: orcamentoObservacoes.value,
             subTotal, descontoGeral, totalComDesconto, frete, totalFinal
         };
@@ -475,6 +482,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // ORÇAMENTOS SALVOS
     // ==========================================
+    let orcamentosSalvosCache = [];
+
     const formatDate = (isoStr) => {
         if (!isoStr) return '--';
         try {
@@ -483,21 +492,97 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (_) { return isoStr; }
     };
 
-    const carregarOrcamentosSalvos = async () => {
-        tabelaOrcamentosSalvos.innerHTML = '<tr><td colspan="7" style="text-align: center;">Carregando...</td></tr>';
-        const lista = await fetchData('orcamentos');
-        if (!lista) return;
-        if (lista.length === 0) {
-            tabelaOrcamentosSalvos.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #90a4ae;">Nenhum orçamento salvo ainda.</td></tr>';
+    const formatEntrega = (dataStr) => {
+        if (!dataStr) return '<span style="color: #90a4ae;">—</span>';
+        try {
+            const parts = dataStr.split('-');
+            if (parts.length === 3) {
+                const ano = parseInt(parts[0], 10);
+                const mes = parseInt(parts[1], 10) - 1;
+                const dia = parseInt(parts[2], 10);
+                const dataEntregaObj = new Date(ano, mes, dia);
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+
+                const dataFormatada = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                const diffTime = dataEntregaObj.getTime() - hoje.getTime();
+                const diffDias = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDias < 0) {
+                    return `<span class="badge-entrega badge-entrega-passada" title="Data ultrapassada">📅 ${dataFormatada} <small>(${Math.abs(diffDias)}d atrás)</small></span>`;
+                } else if (diffDias === 0) {
+                    return `<span class="badge-entrega badge-entrega-hoje" title="Entrega marcada para HOJE!">🚨 <strong>${dataFormatada} (HOJE!)</strong></span>`;
+                } else if (diffDias === 1) {
+                    return `<span class="badge-entrega badge-entrega-urgente" title="Entrega Amanhã!">⚠️ <strong>${dataFormatada} (Amanhã)</strong></span>`;
+                } else if (diffDias <= 7) {
+                    return `<span class="badge-entrega badge-entrega-urgente" title="Entrega próxima">⏳ ${dataFormatada} (em ${diffDias}d)</span>`;
+                } else {
+                    return `<span class="badge-entrega badge-entrega-futura">📅 ${dataFormatada}</span>`;
+                }
+            }
+            return dataStr;
+        } catch (_) { return dataStr; }
+    };
+
+    const ordenarListaOrcamentos = (lista, criterio) => {
+        const itens = [...lista];
+        if (criterio === 'entrega_asc') {
+            itens.sort((a, b) => {
+                const temA = !!a.DATA_ENTREGA;
+                const temB = !!b.DATA_ENTREGA;
+                if (temA && !temB) return -1;
+                if (!temA && temB) return 1;
+                if (!temA && !temB) return b.COD_ORCAMENTO - a.COD_ORCAMENTO;
+                if (a.DATA_ENTREGA !== b.DATA_ENTREGA) return a.DATA_ENTREGA.localeCompare(b.DATA_ENTREGA);
+                return b.COD_ORCAMENTO - a.COD_ORCAMENTO;
+            });
+        } else if (criterio === 'entrega_desc') {
+            itens.sort((a, b) => {
+                const temA = !!a.DATA_ENTREGA;
+                const temB = !!b.DATA_ENTREGA;
+                if (temA && !temB) return -1;
+                if (!temA && temB) return 1;
+                if (!temA && !temB) return b.COD_ORCAMENTO - a.COD_ORCAMENTO;
+                if (a.DATA_ENTREGA !== b.DATA_ENTREGA) return b.DATA_ENTREGA.localeCompare(a.DATA_ENTREGA);
+                return b.COD_ORCAMENTO - a.COD_ORCAMENTO;
+            });
+        } else if (criterio === 'id_asc') {
+            itens.sort((a, b) => a.COD_ORCAMENTO - b.COD_ORCAMENTO);
+        } else {
+            // id_desc (padrão por ID decrescente)
+            itens.sort((a, b) => b.COD_ORCAMENTO - a.COD_ORCAMENTO);
+        }
+        return itens;
+    };
+
+    const atualizarIndicadoresOrdenacao = (criterio) => {
+        if (sortIconEntrega) {
+            if (criterio === 'entrega_asc') sortIconEntrega.textContent = '🔼 (Próximos)';
+            else if (criterio === 'entrega_desc') sortIconEntrega.textContent = '🔽 (Distantes)';
+            else sortIconEntrega.textContent = '↕️';
+        }
+        if (selectOrdenacaoOrcamentos && selectOrdenacaoOrcamentos.value !== criterio) {
+            selectOrdenacaoOrcamentos.value = criterio;
+        }
+    };
+
+    const renderTabelaOrcamentosSalvos = () => {
+        if (!orcamentosSalvosCache || orcamentosSalvosCache.length === 0) {
+            tabelaOrcamentosSalvos.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #90a4ae;">Nenhum orçamento salvo ainda.</td></tr>';
             return;
         }
+        const criterio = selectOrdenacaoOrcamentos ? selectOrdenacaoOrcamentos.value : 'entrega_asc';
+        atualizarIndicadoresOrdenacao(criterio);
+        const listaOrdenada = ordenarListaOrcamentos(orcamentosSalvosCache, criterio);
+
         tabelaOrcamentosSalvos.innerHTML = '';
-        lista.forEach(o => {
+        listaOrdenada.forEach(o => {
             tabelaOrcamentosSalvos.innerHTML += `<tr>
                 <td><strong>#${o.COD_ORCAMENTO}</strong></td>
                 <td>${formatDate(o.CRIADO_EM)}</td>
                 <td>${o.CLIENTE || '<em style="color:#90a4ae">—</em>'}</td>
                 <td>${o.VALIDADE ? o.VALIDADE.split('-').reverse().join('/') : '<em style="color:#90a4ae">—</em>'}</td>
+                <td>${formatEntrega(o.DATA_ENTREGA)}</td>
                 <td><strong>R$ ${parseFloat(o.TOTAL_FINAL).toFixed(2)}</strong></td>
                 <td>${o.CRIADO_POR_NOME || '--'}</td>
                 <td>
@@ -509,6 +594,36 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>`;
         });
     };
+
+    const carregarOrcamentosSalvos = async () => {
+        tabelaOrcamentosSalvos.innerHTML = '<tr><td colspan="8" style="text-align: center;">Carregando...</td></tr>';
+        const lista = await fetchData('orcamentos');
+        if (!lista) return;
+        orcamentosSalvosCache = lista;
+        renderTabelaOrcamentosSalvos();
+    };
+
+    if (selectOrdenacaoOrcamentos) {
+        selectOrdenacaoOrcamentos.addEventListener('change', () => {
+            renderTabelaOrcamentosSalvos();
+        });
+    }
+
+    if (btnFiltroProximaEntrega) {
+        btnFiltroProximaEntrega.addEventListener('click', () => {
+            if (selectOrdenacaoOrcamentos) selectOrdenacaoOrcamentos.value = 'entrega_asc';
+            renderTabelaOrcamentosSalvos();
+        });
+    }
+
+    if (thEntrega) {
+        thEntrega.addEventListener('click', () => {
+            const atual = selectOrdenacaoOrcamentos ? selectOrdenacaoOrcamentos.value : 'id_desc';
+            const novo = (atual === 'entrega_asc') ? 'entrega_desc' : 'entrega_asc';
+            if (selectOrdenacaoOrcamentos) selectOrdenacaoOrcamentos.value = novo;
+            renderTabelaOrcamentosSalvos();
+        });
+    }
 
     tabelaOrcamentosSalvos.addEventListener('click', async (e) => {
         if (e.target.classList.contains('btn-del-orcamento')) {
@@ -533,6 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }));
             orcamentoCliente.value = detalhe.CLIENTE || '';
             orcamentoValidade.value = detalhe.VALIDADE || '';
+            if (orcamentoDataEntrega) orcamentoDataEntrega.value = detalhe.DATA_ENTREGA || '';
             orcamentoObservacoes.value = detalhe.OBSERVACOES || '';
             orcamentoDescontoGeral.value = detalhe.DESCONTO_GERAL || 0;
             orcamentoFrete.value = detalhe.FRETE || 0;

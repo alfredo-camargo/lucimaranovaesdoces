@@ -81,6 +81,7 @@ class OrcamentoPayload(BaseModel):
     totalFinal: float = 0.0
     cliente: Optional[str] = ""
     validade: Optional[str] = ""
+    data_entrega: Optional[str] = ""
     observacoes: Optional[str] = ""
 
 # --- Modelos para Autenticação e Usuários ---
@@ -127,6 +128,7 @@ class OrcamentoSalvoResponse(BaseModel):
     COD_ORCAMENTO: int
     CLIENTE: Optional[str] = None
     VALIDADE: Optional[str] = None
+    DATA_ENTREGA: Optional[str] = None
     OBSERVACOES: Optional[str] = None
     SUBTOTAL: float
     DESCONTO_GERAL: float

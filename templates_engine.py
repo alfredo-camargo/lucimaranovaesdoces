@@ -144,8 +144,16 @@ def generate_orcamento_html(data: OrcamentoPayload, base_url: str) -> str:
         """
 
     cliente_html = ""
+    detalhes_items = []
     if data.cliente:
-        cliente_html = f"""<div class="details"><div class="details-item"><strong>Cliente:</strong> {html.escape(data.cliente)}</div></div>"""
+        detalhes_items.append(f"""<div class="details-item"><strong>Cliente:</strong> {html.escape(data.cliente)}</div>""")
+    if getattr(data, "data_entrega", None) and data.data_entrega:
+        parts_ent = data.data_entrega.strip().split("-")
+        data_ent_fmt = f"{parts_ent[2]}/{parts_ent[1]}/{parts_ent[0]}" if len(parts_ent) == 3 else html.escape(data.data_entrega)
+        detalhes_items.append(f"""<div class="details-item"><strong>Data de Entrega:</strong> {data_ent_fmt}</div>""")
+
+    if detalhes_items:
+        cliente_html = f"""<div class="details">{''.join(detalhes_items)}</div>"""
 
     desconto_valor = data.subTotal - data.totalComDesconto
 

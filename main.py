@@ -470,13 +470,14 @@ def salvar_orcamento(
             db.execute_query(
                 """
                 UPDATE TB_ORCAMENTOS SET
-                    CLIENTE = ?, VALIDADE = ?, OBSERVACOES = ?, SUBTOTAL = ?,
+                    CLIENTE = ?, VALIDADE = ?, DATA_ENTREGA = ?, OBSERVACOES = ?, SUBTOTAL = ?,
                     DESCONTO_GERAL = ?, TOTAL_COM_DESCONTO = ?, FRETE = ?, TOTAL_FINAL = ?
                 WHERE COD_ORCAMENTO = ?
                 """,
                 (
                     payload.cliente or "",
                     payload.validade or "",
+                    payload.data_entrega or "",
                     payload.observacoes or "",
                     payload.subTotal,
                     payload.descontoGeral,
@@ -509,13 +510,14 @@ def salvar_orcamento(
     orcamento_id = db.execute_insert(
         """
         INSERT INTO TB_ORCAMENTOS (
-            CLIENTE, VALIDADE, OBSERVACOES, SUBTOTAL, DESCONTO_GERAL,
+            CLIENTE, VALIDADE, DATA_ENTREGA, OBSERVACOES, SUBTOTAL, DESCONTO_GERAL,
             TOTAL_COM_DESCONTO, FRETE, TOTAL_FINAL, COD_USUARIO
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             payload.cliente or "",
             payload.validade or "",
+            payload.data_entrega or "",
             payload.observacoes or "",
             payload.subTotal,
             payload.descontoGeral,
@@ -550,7 +552,7 @@ def salvar_orcamento(
 def listar_orcamentos_salvos(user: Dict[str, Any] = Depends(get_current_active_user)):
     """Retorna a lista de orçamentos gravados."""
     query = """
-        SELECT o.COD_ORCAMENTO, o.CLIENTE, o.VALIDADE, o.OBSERVACOES, o.SUBTOTAL,
+        SELECT o.COD_ORCAMENTO, o.CLIENTE, o.VALIDADE, o.DATA_ENTREGA, o.OBSERVACOES, o.SUBTOTAL,
                o.DESCONTO_GERAL, o.TOTAL_COM_DESCONTO, o.FRETE, o.TOTAL_FINAL,
                o.CRIADO_EM, o.COD_USUARIO, u.NOME as CRIADO_POR_NOME
         FROM TB_ORCAMENTOS o
@@ -564,7 +566,7 @@ def obter_orcamento_salvo(id: int, user: Dict[str, Any] = Depends(get_current_ac
     """Retorna detalhes e itens de um orçamento gravado."""
     orcamento = db.fetch_one(
         """
-        SELECT o.COD_ORCAMENTO, o.CLIENTE, o.VALIDADE, o.OBSERVACOES, o.SUBTOTAL,
+        SELECT o.COD_ORCAMENTO, o.CLIENTE, o.VALIDADE, o.DATA_ENTREGA, o.OBSERVACOES, o.SUBTOTAL,
                o.DESCONTO_GERAL, o.TOTAL_COM_DESCONTO, o.FRETE, o.TOTAL_FINAL,
                o.CRIADO_EM, o.COD_USUARIO, u.NOME as CRIADO_POR_NOME
         FROM TB_ORCAMENTOS o
@@ -635,6 +637,7 @@ def _build_payload_from_db(id: int) -> OrcamentoPayload:
         totalFinal=float(orcamento["TOTAL_FINAL"]),
         cliente=orcamento["CLIENTE"] or "",
         validade=orcamento["VALIDADE"] or "",
+        data_entrega=orcamento["DATA_ENTREGA"] or "",
         observacoes=orcamento["OBSERVACOES"] or ""
     )
 
